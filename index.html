@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Spreadsheet</title>
+    <style type="text/tailwindcss">
+        @theme {
+        --color-clifford: #da373d;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body>
+
+
+
+    <div class="spreadsheet-container w-full h-screen flex flex-col">
+
+
+        <div  id="scroll-viewport" class="w-full h-full overflow-auto border border-gray-300 relative">
+            <!-- Main Drawing Layer -->
+            <canvas id="spreadsheet" height="2000" width="20000" class=" block" ></canvas>
+
+        </div>
+
+
+        <!-- Floating Input Textbox Editor -->
+        <input type="text" id="editor" class="cell-editor absolute hidden z-10" />
+    </div>
+
+
+    <!-- import script -->
+    <script src="/dist/index.js" type="module" defer></script>
+</body>
+
+</html>
