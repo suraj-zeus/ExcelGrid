@@ -1,0 +1,45 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#gridWrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+
+#scrollBox {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  position: relative;
+}
+
+
+#spacer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+
+#gridCanvas {
+  position: sticky;
+  top: 0;
+  left: 0;
+  display: block;
+  background: #ffffff;
+}
+
+#cellEditor {
+  position: absolute;
+  display: none;
+  box-sizing: border-box;
+  border: 2px solid #107c41;
+  outline: none;
+  font: 13px Arial;
+  padding: 0 4px;
+}
