@@ -28,10 +28,12 @@ export class DimensionManager {
     this.sizes[index] = Math.max(15, newSize); 
   }
 
-  // offset = {sum of all cell size having index less than current index}
+  // offset : sum of all cell size having index less than current index
   public getOffset(index : number) : number {
     let total = 0;
-    for (let i = 0; i < index; i++) total += this.sizes[i]!;
+    for (let i = 0; i < index; i++) {
+      total += this.sizes[i]!;
+    }
     return total;
   }
 

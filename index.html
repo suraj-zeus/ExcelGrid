@@ -1,23 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Simple Excel Grid</title>
-<link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-
-  <div id="gridWrapper">
-
-    
-     
-    <div id="scrollBox">
-      <div id="spacer"> </div>
-      <canvas id="gridCanvas"></canvas>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simple Excel Grid</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --color-clifford: #da373d;
+      }
+    </style>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+     <!-- taskbar/toolbar options -->
+    <div id="toolbar" class="p-2 font-sans text-[13px] flex items-center gap-2 border-b-1 border-gray-400">
+      <button id="undoBtn" class="border-1 border-gray-400 hover:border-green-400 active:bg-green-400 active:text-white px-4 py-1 rounded-md hover:cursor-pointer hover:bg-gray-200">Undo</button>
+      <button id="redoBtn" class="border-1 border-gray-400 hover:border-green-400 active:bg-green-400 active:text-white px-4 py-1 rounded-md hover:cursor-pointer hover:bg-gray-200">Redo</button>
+      <span style="margin-left: 12px; color: #666" >
+        Tip1 : Press <code>Ctrl+Z</code> to undo, <code>Ctrl+Y</code> to redo.
+      </span>
+      <span style="margin-left: 12px; color: #666">
+        Tip2: drag a column/row header border to resize. 
+      </span>
+      <span style="margin-left: 12px; color: #666">
+        Tip3: Type a formula like
+        <code>=A1+B2</code> or <code>=SUM(A1:A5)</code> into a cell.
+      </span>
     </div>
-    <input id="cellEditor" type="text" />
-  </div>
 
-  <script src="./dist/index.js" type="module" ></script>
-</body>
+
+    <!-- main grid wrapper -->
+    <div id="gridWrapper">
+      <!-- main grid view -->
+      <div id="scrollBox">
+        <div id="spacer"></div>
+        <canvas id="gridCanvas"></canvas>
+        <input id="cellEditor" type="text"  class="absolute hidden box-border border-2 border-[#107c41] outline-none text-[13px] font-[Arial,sans-serif] px-1" />
+      </div>
+    </div>
+
+
+     <!-- status bar options  -->
+    <div id="statusbar" class="p-2 font-sans text-[13px] flex items-center gap-4 border-t-1 border-gray-400 min-h-[40px]  " >
+    
+
+      <div id="selectionRangeDiv">
+        <span id="selectionRangeSpan">
+        </span>
+      </div>
+
+      <div id="currentInputDiv" cla>
+        <span id="currentInputField"></span>
+      </div>
+
+      <div id="statsDiv" class="flex gap-4 ml-auto text-gray-700">
+          <span id="statCount"></span>
+          <span id="statSum"></span>
+          <span id="statAvg"></span>
+          <span id="statMin"></span>
+          <span id="statMax"></span>
+      </div>
+    </div>
+
+
+    <script src="./dist/index.js" type="module"></script>
+  </body>
 </html>

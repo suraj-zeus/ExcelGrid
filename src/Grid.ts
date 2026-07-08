@@ -1,252 +1,212 @@
-import { DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT, HEADER_H, ROWHDR_W } from "./constants.js";
+import { CellEditor } from "./CellEditor.js";
+import {
+  DEFAULT_COL_WIDTH,
+  DEFAULT_ROW_HEIGHT,
+  HEADER_H,
+  ROWHDR_W,
+} from "./constants.js";
 import { DataStore } from "./Datastore.js";
 import { DimensionManager } from "./DimensionManager.js";
+import { EventManager } from "./EventManager.js";
+import { FormulaEngine } from "./FormulaEngine.js";
 import { GridRenderer } from "./GridRenderer.js";
+import { ResizeManager } from "./ResizeManager.js";
 import { Selection } from "./Selection.js";
-import type { EditingCellType } from "./types.js";
-
-
-
-
-
+import { StatusBarManager } from "./StatusBarManager.js";
+import { UndoRedoManager } from "./UndoRedoManager.js";
 
 export class Grid {
+  // HTML elements used to render the grid
+  private canvas: HTMLCanvasElement;
+  private scrollBox: HTMLDivElement;
+  private spacer: HTMLDivElement;
 
-    private canvas: HTMLCanvasElement;
-    private scrollBox: HTMLDivElement;
-    private spacer: HTMLDivElement;
-    private editorInput: HTMLInputElement;
-    private totalRows: number;
-    private totalCols: number;
-    private scrollX: number;
-    private scrollY: number;
-    private isDragging: boolean;
-    private editingCell : EditingCellType;
+  // HTML input element used for editing cell values
+  private editorInput: HTMLInputElement;
 
-    private renderer: GridRenderer;
-    private selection : Selection;
+  // total no. of rows and columns in the grid
+  private totalRows: number;
+  private totalCols: number;
 
-    private rowManager: DimensionManager;
-    private colManager: DimensionManager;
-    private dataStore : DataStore;
+  // current scroll position of the grid
+  private scrollX: number;
+  private scrollY: number;
 
+  // // is mouse being dragged after selecting a cell (header or body cell)
+  // private editingCell: EditingCellTypeOrNull;
 
+  // grid renderer
+  private renderer: GridRenderer;
 
+  // selection manager (manages selected cell, row, column, or range)
+  private selection: Selection;
 
+  // dimension managers for rows and columns (manages size and offset of each row/column)
+  private rowManager: DimensionManager;
+  private colManager: DimensionManager;
 
-    constructor(canvas: HTMLCanvasElement, scrollBox: HTMLDivElement, spacer: HTMLDivElement, editorInput: HTMLInputElement, totalRows: number, totalCols: number) {
-        this.canvas = canvas;
-        this.scrollBox = scrollBox;
-        this.spacer = spacer;
-        this.editorInput = editorInput;
+  // data store (manages the data in the grid)
+  private dataStore: DataStore;
 
-        this.rowManager = new DimensionManager(totalRows, DEFAULT_ROW_HEIGHT);
-        this.colManager = new DimensionManager(totalCols, DEFAULT_COL_WIDTH);
-        this.dataStore = new DataStore();
-        this.selection = new Selection();
-        this.renderer = new GridRenderer(canvas, this);
+  // for undo/redo
+  private undoRedoManager: UndoRedoManager;
 
-        this.scrollX = 0;
-        this.scrollY = 0;
-        this.isDragging = false;   // true while mouse is held down for range-select
-        this.editingCell = {row : -1, col : -1};   // { row, col } when editing, else {-1, -1}
+  // formula engine
+  private formulaEngine: FormulaEngine;
 
-        this.totalRows = totalRows;
-        this.totalCols = totalCols;
+  // event manager (handles mouse and keyboard events)
+  private eventManager: EventManager;
 
+  // resize manager (handles resizing of rows and columns)
+  private resizeManager: ResizeManager;
 
-        this.setupSpacer();
-        this.resizeCanvas();
-        this.bindEvents();
-        this.render();
-    }
+  // cell editor (handles editing of cell values)
+  private cellEditor: CellEditor;
 
+  // status bar manager (handles updating the status bar)
+  private statusBarManager: StatusBarManager;
 
-    public getRowManager(): DimensionManager {
-        return this.rowManager;
-    }
+  
+  constructor(
+    canvas: HTMLCanvasElement,
+    scrollBox: HTMLDivElement,
+    spacer: HTMLDivElement,
+    editorInput: HTMLInputElement,
+    totalRows: number,
+    totalCols: number,
+    undoBtn: HTMLButtonElement,
+    redoBtn: HTMLButtonElement,
+  ) {
+    this.canvas = canvas;
+    this.scrollBox = scrollBox;
+    this.spacer = spacer;
+    this.editorInput = editorInput;
 
-    public getColManager(): DimensionManager {
-        return this.colManager;
-    }
+    this.totalRows = totalRows;
+    this.totalCols = totalCols;
 
-    public getScrollX(): number {
-        return this.scrollX;
-    }
+    this.scrollX = 0;
+    this.scrollY = 0;
 
-    public getScrollY(): number {
-        return this.scrollY;
-    }
+    // instance of core managers and engines
+    this.rowManager = new DimensionManager(totalRows, DEFAULT_ROW_HEIGHT);
+    this.colManager = new DimensionManager(totalCols, DEFAULT_COL_WIDTH);
+    this.dataStore = new DataStore();
+    this.selection = new Selection();
+    this.undoRedoManager = new UndoRedoManager();
+    this.formulaEngine = new FormulaEngine(this.dataStore);
 
-    public getSelection(): Selection {
-        return this.selection;
-    }
+    // renderer for the grid
+    this.renderer = new GridRenderer(canvas, this);
 
-    public getDataStore() : DataStore {
-      return this.dataStore;
-    }
-
-    
-
-
-
-
-
-
-    public render() {
-        this.renderer.render();
-    }
-
-    resizeCanvas() {
-      this.canvas.width = this.scrollBox.clientWidth;
-      this.canvas.height = this.scrollBox.clientHeight;
-    }
+    // this.isDragging = false; // true while mouse is held down for range-select
+    // this.editingCell = null; // { row, col } when editing, else null
 
 
-      // makes the spacer div the full size of the grid
-      setupSpacer() {
-        this.spacer.style.width = (this.colManager.getTotalSize() + ROWHDR_W) + 'px';
-        this.spacer.style.height = (this.rowManager.getTotalSize() + HEADER_H) + 'px';
-      }
+    this.cellEditor = new CellEditor(
+      this.editorInput,
+      this.dataStore,
+      this.rowManager,
+      this.colManager,
+      this.undoRedoManager,
+      () => this.scrollX,
+      () => this.scrollY,
+      () => this.render(),
+    );
+
+    this.resizeManager = new ResizeManager(
+      this.rowManager,
+      this.colManager,
+      this.undoRedoManager,
+      () => this.scrollX,
+      () => this.scrollY,
+      () => this.setupSpacer(),
+      () => this.render(),
+    );
 
 
-      // get row number at y
-      private getRowAtY(y : number) : number{
-        return this.rowManager.getIndexAtOffset(Math.max(0, y - HEADER_H + this.scrollY));
-      }
+    this.eventManager = new EventManager(
+      this.canvas,
+      this.scrollBox,
+      this.editorInput,
+      undoBtn,
+      redoBtn,
+      this.cellEditor,
+      this.resizeManager,
+      this.selection,
+      this.undoRedoManager,
+      this.rowManager,
+      this.colManager,
+      () => this.scrollX,
+      () => this.scrollY,
+      (x: number, y: number) => {
+        this.scrollX = x;
+        this.scrollY = y;
+      },
+      () => this.resizeCanvas(),
+      () => this.render(),
+    );
 
-      // get column number at x
-      private getColAtX(x : number) {
-        return this.colManager.getIndexAtOffset(Math.max(0, x - ROWHDR_W + this.scrollX));
-      }
+    this.statusBarManager = new StatusBarManager(
+      this.selection,
+      this.dataStore,
+      this.formulaEngine,
+      this.cellEditor
+    );
 
-      private bindEvents() : void{
 
-        // scrolling
-        this.scrollBox.addEventListener('scroll', () => {
-          this.scrollX = this.scrollBox.scrollLeft;
-          this.scrollY = this.scrollBox.scrollTop;
-          this.render();
-        });
+    this.setupSpacer();
+    this.resizeCanvas();
+    this.eventManager.bindEvents();
+    this.render();
+  } 
 
-        // window resize
-        window.addEventListener('resize', () => {
-          this.resizeCanvas();
-          this.render();
-        });
+  // getters and setters for private members
+  public getRowManager(): DimensionManager {
+    return this.rowManager;
+  }
 
-        // mouse down -> start selection (cell, row, column, or range)
-        this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+  public getColManager(): DimensionManager {
+    return this.colManager;
+  }
 
-        // mouse move -> extend range selection while dragging
-        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+  public getScrollX(): number {
+    return this.scrollX;
+  }
 
-        // mouse up -> stop dragging
-        window.addEventListener('mouseup', () => { this.isDragging = false; });
+  public getScrollY(): number {
+    return this.scrollY;
+  }
 
-        // double click -> start editing the cell
-        this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
+  public getSelection(): Selection {
+    return this.selection;
+  }
 
-        // editor box events
-        this.editorInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') this.finishEditing();
-          if (e.key === 'Escape') this.cancelEditing();
-        });
-        this.editorInput.addEventListener('blur', () => this.finishEditing());
-      }
+  public getFormulaEngine(): FormulaEngine {
+    return this.formulaEngine;
+  }
 
-      private handleMouseDown(e : MouseEvent) : void{
-        // coordinates of click
-        const x = e.offsetX, y = e.offsetY;
+  public getDataStore(): DataStore {
+    return this.dataStore;
+  }
 
-        // clicked on column header 
-        // select all rows in that column
-        if (y < HEADER_H && x > ROWHDR_W) {
 
-          // TODO : if mouse event is around border points
-        
-          const col = this.getColAtX(x);
-          this.selection.selectColumn(col, this.rowManager.getCount());
-          this.render();
-          return;
-        }
 
-        // clicked on row header -> select whole row
-        if (x < ROWHDR_W && y > HEADER_H) {
-          const row = this.getRowAtY(y);
-          this.selection.selectRow(row, this.colManager.getCount());
-          this.render();
-          return;
-        }
+  // core methods for grid
+  public render() {
+    this.renderer.render();
+    this.statusBarManager.updateStatusBar();
+    this.cellEditor.updateEditorPosition();
+  }
 
-        // clicked on a normal cell -> start a range selection (single cell if no drag happens)
-        if (x > ROWHDR_W && y > HEADER_H) {
-          const row = this.getRowAtY(y);
-          const col = this.getColAtX(x);
-          this.selection.selectCell(row, col);
-          this.isDragging = true;
-          this.render();
-        }
-      }
+  private resizeCanvas() {
+    this.canvas.width = this.scrollBox.clientWidth;
+    this.canvas.height = this.scrollBox.clientHeight;
+  }
 
-      private handleMouseMove(e : MouseEvent) : void {
-        if (!this.isDragging) return;
-
-        // coordinates of moving mouse
-        const x = e.offsetX, y = e.offsetY;
-
-        if (x < ROWHDR_W || y < HEADER_H) return; // ignore header area while dragging
-
-        const row = this.getRowAtY(y);
-        const col = this.getColAtX(x);
-        this.selection.extendTo(row, col);
-        this.render();
-      }
-
-      private handleDoubleClick(e : MouseEvent) : void {
-        // coordinates of double click
-        const x = e.offsetX, y = e.offsetY;
-        if (x < ROWHDR_W || y < HEADER_H) return;
-
-        const row = this.getRowAtY(y);
-        const col = this.getColAtX(x);
-        this.startEditing(row, col);
-      }
-
-      private startEditing(row : number, col: number) : void {
-        this.editingCell = { row, col };
-
-        // position the input box exactly on top of the cell
-        const tx = this.colManager.getOffset(col) - this.scrollX + ROWHDR_W;
-        const ty = this.rowManager.getOffset(row) - this.scrollY + HEADER_H;
-        const w = this.colManager.getSize(col);
-        const h = this.rowManager.getSize(row);
-
-        this.editorInput.style.left = tx + 'px';
-        this.editorInput.style.top = ty + 'px';
-        this.editorInput.style.width = w + 'px';
-        this.editorInput.style.height = h + 'px';
-        this.editorInput.style.display = 'block';
-
-        this.editorInput.value = this.dataStore.getValue(row, col);
-
-        this.editorInput.focus();
-      }
-
-      private finishEditing() : void {
-        if (this.editingCell.col == -1 || this.editingCell.row == -1) return;
-
-        const { row, col } = this.editingCell;
-
-        this.dataStore.setValue(row, col, this.editorInput.value);
-
-        this.editorInput.style.display = 'none';
-        this.editingCell = {row : -1, col : -1};
-        this.render();
-      }
-
-      private cancelEditing() : void  {
-        this.editorInput.style.display = 'none';
-        this.editingCell = {row : -1, col : -1};
-      }
+  // makes the spacer div the full size of the grid
+  private setupSpacer() {
+    this.spacer.style.width = this.colManager.getTotalSize() + ROWHDR_W + "px";
+    this.spacer.style.height = this.rowManager.getTotalSize() + HEADER_H + "px";
+  }
 }

@@ -10,6 +10,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const scrollBox = document.getElementById('scrollBox') as HTMLDivElement;
     const spacer = document.getElementById('spacer') as HTMLDivElement;
     const inputEle = document.getElementById('cellEditor') as HTMLInputElement;
+    const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
+    const redoBtn = document.getElementById('redoBtn') as HTMLButtonElement;
 
 
     const grid = new Grid(
@@ -19,6 +21,8 @@ window.addEventListener('DOMContentLoaded', () => {
         inputEle,
         TOTAL_ROWS,
         TOTAL_COLS,
+        undoBtn,
+        redoBtn
     );
 
 

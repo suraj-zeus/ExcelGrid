@@ -1,13 +1,17 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #gridWrapper {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  flex: 1;
 }
 
 
@@ -34,12 +38,3 @@ html, body {
   background: #ffffff;
 }
 
-#cellEditor {
-  position: absolute;
-  display: none;
-  box-sizing: border-box;
-  border: 2px solid #107c41;
-  outline: none;
-  font: 13px Arial;
-  padding: 0 4px;
-}

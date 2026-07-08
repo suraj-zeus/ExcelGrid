@@ -1,6 +1,7 @@
-import { HEADER_H, ROWHDR_W } from "./constants.js";
+import { CELL_BORDER_COLOR, CELL_BORDER_SELECTED_COLOR, CELL_NORMAL_COLOR, CELL_SELECTED_COLOR, CELL_TEXT_COLOR, HEADER_BORDER_COLOR, HEADER_H, HEADER_NORMAL_COLOR, HEADER_SELECTED_COLOR, HEADER_TEXT_COLOR, ROWHDR_W } from "./constants.js";
 import type { DataStore } from "./Datastore.js";
 import { DimensionManager } from "./DimensionManager.js";
+import type { FormulaEngine } from "./FormulaEngine.js";
 import type { Grid } from "./Grid.js";
 import type { Selection } from "./Selection.js";
 
@@ -25,6 +26,7 @@ export class GridRenderer {
     const scrollY: number = this.grid.getScrollY();
     const selection: Selection = this.grid.getSelection();
     const dataStore: DataStore = this.grid.getDataStore();
+    const formulaEngine: FormulaEngine = this.grid.getFormulaEngine();
 
 
     // render inside this view
@@ -50,51 +52,64 @@ export class GridRenderer {
         const x = colManager.getOffset(col) - scrollX + ROWHDR_W;
         const w = colManager.getSize(col);
 
-        ctx.fillStyle = selection.isCellSelected(row, col) ? '#b9cfab' : '#ffffff';
+        const isSelected = selection.isCellSelected(row, col);
+        ctx.fillStyle = isSelected ? CELL_SELECTED_COLOR : CELL_NORMAL_COLOR;
         ctx.fillRect(x, y, w, h);
 
-        ctx.strokeStyle = '#d9d9d9';
+        ctx.strokeStyle = isSelected ? CELL_BORDER_SELECTED_COLOR : CELL_BORDER_COLOR;
         ctx.strokeRect(x, y, w, h);
 
         ctx.fillText("hello", x + 5, y + h / 2);
-        const value = dataStore.getValue(row, col);
 
-        if (value) {
-          ctx.fillStyle = '#000000';
-          ctx.fillText(value, x + 5, y + h / 2);
+
+        const rawValue = dataStore.getValue(row, col);
+        const evaluatedValue = formulaEngine.evaluate(rawValue);
+
+        if (evaluatedValue !== null && evaluatedValue !== undefined) {
+          ctx.fillStyle = CELL_TEXT_COLOR;
+          ctx.fillText(evaluatedValue.toString(), x + 5, y + h / 2);
         }
       }
     }
 
     // column headers
+    const {top, bottom, left, right} = selection.getBounds();
+
     for (let col = firstCol; col <= lastCol; col++) {
       const tx = colManager.getOffset(col) - scrollX + ROWHDR_W;
       const w = colManager.getSize(col);
 
-      ctx.fillStyle = '#f3f3f3';  // color inside cell body
+      const isSelected = (col >= left && col <= right);
+      ctx.fillStyle = isSelected ? HEADER_SELECTED_COLOR : HEADER_NORMAL_COLOR;
       ctx.fillRect(tx, 0, w, HEADER_H); // draw rect
-      ctx.strokeStyle = '#cccccc';  // border color
+      ctx.strokeStyle = HEADER_BORDER_COLOR;  // border color
       ctx.strokeRect(tx, 0, w, HEADER_H);
-      ctx.fillStyle = '#000000';
-      ctx.fillText( this.getColHeaderCaption(col), tx + colManager.getSize(col) / 2, HEADER_H / 2);
+      ctx.fillStyle = HEADER_TEXT_COLOR; // text color
+      ctx.fillText( formulaEngine.columnIndexToLetter(col), tx + colManager.getSize(col) / 2, HEADER_H / 2);
     }
 
     // row headers
     for (let row = firstRow; row <= lastRow; row++) {
       const y = rowManager.getOffset(row) - scrollY + HEADER_H;
       const h = rowManager.getSize(row);
-      ctx.fillStyle = '#f3f3f3';
+
+      const isSelected = (row >= top && row <= bottom);
+
+      ctx.fillStyle = isSelected ? HEADER_SELECTED_COLOR : HEADER_NORMAL_COLOR;
       ctx.fillRect(0, y, ROWHDR_W, h);
-      ctx.strokeStyle = '#cccccc';
+
+      ctx.strokeStyle = HEADER_BORDER_COLOR;
       ctx.strokeRect(0, y, ROWHDR_W, h);
-      ctx.fillStyle = '#000000';
+
+      ctx.fillStyle = HEADER_TEXT_COLOR;
       ctx.fillText(String(row + 1), 15, y + h / 2);
     }
 
     // top-left empty corner box
-    ctx.fillStyle = '#f3f3f3';
+    ctx.fillStyle = HEADER_NORMAL_COLOR;
     ctx.fillRect(0, 0, ROWHDR_W, HEADER_H);
-    ctx.strokeStyle = '#cccccc';
+
+    ctx.strokeStyle = HEADER_BORDER_COLOR;
     ctx.strokeRect(0, 0, ROWHDR_W, HEADER_H);
   }
 

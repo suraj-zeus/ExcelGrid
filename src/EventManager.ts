@@ -1,0 +1,187 @@
+import type { CellEditor } from "./CellEditor.js";
+import { HEADER_H, ROWHDR_W } from "./constants.js";
+import type { DimensionManager } from "./DimensionManager.js";
+import type { FormulaEngine } from "./FormulaEngine.js";
+import type { ResizeManager } from "./ResizeManager.js";
+import type { Selection } from "./Selection.js";
+import type { UndoRedoManager } from "./UndoRedoManager.js";
+
+export class EventManager {
+  // is mouse being dragged after selecting a cell (header or body cell)
+  private isDragging: boolean;
+
+  constructor(
+    private canvas: HTMLCanvasElement,
+    private scrollBox: HTMLDivElement,
+    private editorInput: HTMLInputElement,
+    private undoBtn: HTMLButtonElement,
+    private redoBtn: HTMLButtonElement,
+    private cellEditor: CellEditor,
+    private resizeManager: ResizeManager,
+    private selection: Selection,
+    private undoRedoManager: UndoRedoManager,
+    private rowManager: DimensionManager,
+    private colManager: DimensionManager,
+    private getScrollX: () => number,
+    private getScrollY: () => number,
+    private setScroll: (x: number, y: number) => void,
+    private resizeCanvas: () => void,
+    private render: () => void,
+  ) {
+    this.isDragging = false;
+  }
+
+  // get row number at y
+  private getRowAtY(y: number): number {
+    return this.rowManager.getIndexAtOffset(
+      Math.max(0, y - HEADER_H + this.getScrollY()),
+    );
+  }
+
+  // get column number at x
+  private getColAtX(x: number) {
+    return this.colManager.getIndexAtOffset(
+      Math.max(0, x - ROWHDR_W + this.getScrollX()),
+    );
+  }
+
+  public bindEvents(): void {
+    // scrolling
+    this.scrollBox.addEventListener("scroll", () => {
+      this.setScroll(this.scrollBox.scrollLeft, this.scrollBox.scrollTop);
+      this.render();
+    });
+
+    // window resize
+    window.addEventListener("resize", () => {
+      this.resizeCanvas();
+      this.render();
+    });
+
+    // mouse down -> start selection (cell, row, column, or range)
+    this.canvas.addEventListener("mousedown", (e) => this.handleMouseDown(e));
+
+    // mouse move -> extend range selection while dragging
+    this.canvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
+
+    // mouse up -> stop dragging
+    window.addEventListener("mouseup", (e) => this.handleMouseUp(e));
+
+    // double click -> start editing the cell
+    this.canvas.addEventListener("dblclick", (e) => this.handleDoubleClick(e));
+
+    // editor input box events -> handle finish and cancel editing
+    this.editorInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.cellEditor.finishEditing();
+      if (e.key === "Escape") this.cellEditor.cancelEditing();
+    });
+
+    this.editorInput.addEventListener("blur", () => this.cellEditor.finishEditing());
+
+    // undo / redo events
+    window.addEventListener("keydown", (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+
+      if (e.key.toLowerCase() === "z" && !e.shiftKey) {
+        e.preventDefault();
+        this.undoRedoManager.undo();
+      } else if (e.key.toLowerCase() === "y" && !e.shiftKey) {
+        e.preventDefault();
+        this.undoRedoManager.redo();
+      }
+    });
+
+    this.undoBtn.addEventListener("click", () => {
+      this.undoRedoManager.undo();
+    });
+
+    this.redoBtn.addEventListener("click", () => {
+      this.undoRedoManager.redo();
+    });
+  }
+
+  private handleMouseDown(e: MouseEvent): void {
+    // coordinates of click
+    const x = e.offsetX, y = e.offsetY;
+
+    if (this.resizeManager.handleMouseDown(x, y)) {
+      return
+    };
+
+    // clicked on column header
+    // select all rows in that column
+    if (y < HEADER_H && x > ROWHDR_W) {
+      const col = this.getColAtX(x);
+      this.selection.selectColumn(col, this.rowManager.getCount());
+      this.render();
+      return;
+    }
+
+    // clicked on row header -> select whole row
+    if (x < ROWHDR_W && y > HEADER_H) {
+      const row = this.getRowAtY(y);
+      this.selection.selectRow(row, this.colManager.getCount());
+      this.render();
+      return;
+    }
+
+    // clicked on a normal cell -> start a range selection (single cell if no drag happens)
+    if (x > ROWHDR_W && y > HEADER_H) {
+      const row = this.getRowAtY(y);
+      const col = this.getColAtX(x);
+      this.selection.selectCell(row, col);
+      this.isDragging = true;
+      this.render();
+    }
+  }
+
+  private handleMouseMove(e: MouseEvent): void {
+    // coordinates of moving mouse
+    const x = e.offsetX,
+      y = e.offsetY;
+
+    if (this.resizeManager.handleMouseMove(x, y)) {
+      return;
+    }
+
+    // change the cursor type
+    if (!this.isDragging) {
+      if (this.resizeManager.getColumnBorderIndexAt(x, y) !== null) {
+        this.canvas.style.cursor = "col-resize";
+      } else if (this.resizeManager.getRowBorderIndexAt(x, y) !== null) {
+        this.canvas.style.cursor = "row-resize";
+      } else {
+        this.canvas.style.cursor = "default";
+      }
+    }
+
+    // if mouse is not being dragged, then no need to extend the selection range
+    // also ignore the header area selection while dragging
+    if (!this.isDragging || x < ROWHDR_W || y < HEADER_H) return;
+
+    // otherwise, extend the selection range
+    const row = this.getRowAtY(y);
+    const col = this.getColAtX(x);
+    this.selection.extendTo(row, col);
+    this.render();
+  }
+
+  private handleMouseUp(e: MouseEvent): void {
+    // make dragging false
+    this.isDragging = false;
+
+    this.resizeManager.handleMouseUp();
+  }
+
+  private handleDoubleClick(e: MouseEvent): void {
+    // coordinates of double click
+    const x = e.offsetX, y = e.offsetY;
+    if (x < ROWHDR_W || y < HEADER_H) return;
+
+    const row = this.getRowAtY(y);
+    const col = this.getColAtX(x);
+
+    this.cellEditor.startEditing(row, col);
+    this.render();
+  }
+}
