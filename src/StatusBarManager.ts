@@ -46,7 +46,7 @@ export class StatusBarManager {
     this.updateSelectionRange(bounds);
 
     // current input field value
-    this.updateCurrentInputField(bounds);
+    this.updateCurrentInputField();
 
     // update statistics
     this.updateStatistics(bounds);
@@ -65,14 +65,15 @@ export class StatusBarManager {
     this.selectionRangeSpan.textContent = `Current Selection Range  ${startRef} : ${endRef}`;
   }
 
-  private updateCurrentInputField(bounds: BoundType): void {
+
+  private updateCurrentInputField(): void {
     const editingCell = this.cellEditor.getEditingCell();
 
-    if (!this.currentInputField ) return;
+    if (!this.currentInputField) return;
 
-    if( !editingCell) {
-        this.currentInputField.textContent = "";
-        return;
+    if (!editingCell) {
+      this.currentInputField.textContent = "";
+      return;
     }
 
     const { row, col } = editingCell;

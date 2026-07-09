@@ -53,6 +53,7 @@ export class GridRenderer {
         const w = colManager.getSize(col);
 
         const isSelected = selection.isCellSelected(row, col);
+
         ctx.fillStyle = isSelected ? CELL_SELECTED_COLOR : CELL_NORMAL_COLOR;
         ctx.fillRect(x, y, w, h);
 

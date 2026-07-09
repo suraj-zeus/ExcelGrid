@@ -1,6 +1,6 @@
 // default height of column header row and width of row header column
-export const HEADER_H = 28;   // height of column header row
-export const ROWHDR_W = 50;   // width of row header column
+export const HEADER_H = 50;   // height of column header row
+export const ROWHDR_W = 70;   // width of row header column
 
 // total number of rows and columns in the grid
 export const TOTAL_ROWS = 100000;

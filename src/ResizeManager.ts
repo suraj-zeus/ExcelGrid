@@ -155,7 +155,6 @@ export class ResizeManager {
       const oldResizingSize = this.resizeStartSize;
       const newResizingSize = this.colManager.getSize(resizingColInd);
 
-      // TODO : match input field size with cell size when resizing a column/row while editing a cell
       if (oldResizingSize !== newResizingSize) {
         const command: Command = new ResizeCommand(
           this.colManager,
@@ -178,7 +177,6 @@ export class ResizeManager {
       const oldResizingSize = this.resizeStartSize;
       const newResizingSize = this.rowManager.getSize(resizingRowInd);
 
-      // TODO : match input field size with cell size when resizing a column/row while editing a cell
       if (oldResizingSize !== newResizingSize) {
         const command: Command = new ResizeCommand(
           this.rowManager,

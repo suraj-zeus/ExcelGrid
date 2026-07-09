@@ -71,6 +71,7 @@ export class CellEditor {
 
     this.editorInput.value = rawValue;
     this.editorInput.focus();
+    this.render();
   }
 
   public finishEditing(): void {
@@ -118,8 +119,8 @@ export class CellEditor {
     // position the input box exactly on top of the cell
     // position within the grid (exclude the scroll offset to get the position within the grid)
     // input field moves along with the cell when scrolling
-    const tx = this.colManager.getOffset(col) + ROWHDR_W;
-    const ty = this.rowManager.getOffset(row) + HEADER_H;
+    const tx = this.colManager.getOffset(col) + ROWHDR_W - this.getScrollX();
+    const ty = this.rowManager.getOffset(row) + HEADER_H - this.getScrollY();
 
     const w = this.colManager.getSize(col);
     const h = this.rowManager.getSize(row);
@@ -128,12 +129,10 @@ export class CellEditor {
     this.editorInput.style.top = ty + "px";
     this.editorInput.style.width = w + "px";
     this.editorInput.style.height = h + "px";
+    this.editorInput.focus();
 
     // hide if it is in header area
-    const txWithScroll = tx - this.getScrollX();
-    const tyWithScroll = ty - this.getScrollY();
-
-    if(txWithScroll < ROWHDR_W || tyWithScroll < HEADER_H) {
+    if(tx < ROWHDR_W || ty < HEADER_H) {
       this.editorInput.style.opacity = "0";
       this.editorInput.style.pointerEvents = "none";
     }
