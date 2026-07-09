@@ -55,13 +55,13 @@ export class GridRenderer {
         const isSelected = selection.isCellSelected(row, col);
 
         ctx.fillStyle = isSelected ? CELL_SELECTED_COLOR : CELL_NORMAL_COLOR;
-        ctx.fillRect(x, y, w, h);
+        // ctx.fillRect(x, y, w, h);
+        ctx.fillRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
 
         ctx.strokeStyle = isSelected ? CELL_BORDER_SELECTED_COLOR : CELL_BORDER_COLOR;
-        ctx.strokeRect(x, y, w, h);
-
-        ctx.fillText("hello", x + 5, y + h / 2);
-
+        // ctx.strokeRect(x, y, w, h);
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
         const rawValue = dataStore.getValue(row, col);
         const evaluatedValue = formulaEngine.evaluate(rawValue);
@@ -114,18 +114,4 @@ export class GridRenderer {
     ctx.strokeRect(0, 0, ROWHDR_W, HEADER_H);
   }
 
-  private getColHeaderCaption(col : number) : string {
-    let text : string  = "";
-
-    let x : number = col;
-    while(x >= 0) {
-      const rem : number = x % 26;
-      // char
-      const ch = String.fromCharCode(rem + 65);
-      text = ch + text;
-      x = (x / 26) - 1;
-    }
-
-    return text;
-  }
 }

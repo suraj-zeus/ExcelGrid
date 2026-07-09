@@ -1,5 +1,5 @@
 // default height of column header row and width of row header column
-export const HEADER_H = 50;   // height of column header row
+export const HEADER_H = 30;   // height of column header row
 export const ROWHDR_W = 70;   // width of row header column
 
 // total number of rows and columns in the grid
@@ -20,7 +20,7 @@ export const HEADER_BORDER_COLOR = '#cccccc';
 
 // color options for body cells (inner cells of the grid)
 export const CELL_NORMAL_COLOR = '#ffffff';
-export const CELL_SELECTED_COLOR = '#70d49d';
+export const CELL_SELECTED_COLOR = "#107c4114";
 export const CELL_TEXT_COLOR = '#000000';
 export const CELL_BORDER_COLOR = '#d9d9d9';
 export const CELL_BORDER_SELECTED_COLOR = '#217346';
