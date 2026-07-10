@@ -46,7 +46,6 @@
 
     ```
 
-
 ## Class structure
 
 

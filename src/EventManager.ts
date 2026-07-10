@@ -89,12 +89,10 @@ export class EventManager {
           e.preventDefault();
           this.undoRedoManager.undo();
         } else if (e.key.toLowerCase() === "y" && !e.shiftKey) {
-          e.preventDefault();
           this.undoRedoManager.redo();
         }
       }
       else if (arrowKeys.includes(e.key)) {
-        e.preventDefault();
         this.handleArrowKeyEventForSelection(e);
       }
     });
@@ -118,18 +116,24 @@ export class EventManager {
     const editingCell: EditingCellTypeOrNull = this.cellEditor.getEditingCell();
     this.selection.selectCell(tr, tc);
 
+    if (editingCell && tr === editingCell.row && tc === editingCell.col) {
+      return; // restrict selection movement while editing cell
+    }
+
+
+    e.preventDefault();
     switch (e.key) {
       case 'ArrowUp':
-        this.selectNewCell(editingCell, tr, tc, Math.max(0, tr - 1), tc);
+        this.selectNewCell(Math.max(0, tr - 1), tc);
         break;
       case 'ArrowDown':
-        this.selectNewCell(editingCell, tr, tc, Math.min( this.rowManager.getCount() - 1, tr + 1), tc);
+        this.selectNewCell(Math.min(this.rowManager.getCount() - 1, tr + 1), tc);
         break;
       case 'ArrowLeft':
-        this.selectNewCell(editingCell, tr, tc, tr, Math.max(0, tc - 1));
+        this.selectNewCell(tr, Math.max(0, tc - 1));
         break;
       case 'ArrowRight':
-        this.selectNewCell(editingCell, tr, tc, tr, Math.min(this.colManager.getCount() - 1, tc + 1));
+        this.selectNewCell(tr, Math.min(this.colManager.getCount() - 1, tc + 1));
         break;
     }
 
@@ -137,11 +141,7 @@ export class EventManager {
     this.render();
   }
 
-  private selectNewCell(editingCell: EditingCellTypeOrNull, tr: number, tc: number, ntr: number, ntc: number): void {
-    if (editingCell && tr === editingCell.row && tc === editingCell.col) {
-      this.editorInput.blur();
-    }
-
+  private selectNewCell(ntr: number, ntc: number): void {
     this.selection.selectCell(ntr, ntc);
   }
 
@@ -164,24 +164,24 @@ export class EventManager {
     const visBottom = visTop + this.canvas.height - HEADER_H;
 
     // update horizontal scroll area
-    if(cellRightOffset > visRight) {
+    if (cellRightOffset > visRight) {
       this.setScroll(visLeft + (cellRightOffset - visRight), this.getScrollY());
     }
-    else if(cellLeftOffset < visLeft) {
+    else if (cellLeftOffset < visLeft) {
       this.setScroll(cellLeftOffset, this.getScrollY())
     }
 
     // update vertical scroll area
-    if(cellBottomOffset > visBottom) {
+    if (cellBottomOffset > visBottom) {
       this.setScroll(this.getScrollX(), visTop + cellBottomOffset - visBottom);
     }
-    else if(cellTopOffset < visTop) {
+    else if (cellTopOffset < visTop) {
       this.setScroll(this.getScrollX(), cellTopOffset);
     }
 
   }
 
- 
+
 
   private handleMouseDown(e: MouseEvent): void {
     // coordinates of click
