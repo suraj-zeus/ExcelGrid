@@ -35,7 +35,6 @@ export class ResizeCommand extends Command {
 
     public undo() : void {
         this.dimensionManager.setSize(this.index, this.oldSize);
-
         this.setupSpacer();
         this.render();
     }

@@ -4,7 +4,7 @@ export const ROWHDR_W = 70;   // width of row header column
 
 // total number of rows and columns in the grid
 export const TOTAL_ROWS = 100000;
-export const TOTAL_COLS = 50000;
+export const TOTAL_COLS = 500;
 
 // default size of row height and column width
 export const DEFAULT_ROW_HEIGHT = 24;

@@ -65,16 +65,25 @@ export class GridRenderer {
 
         const rawValue = dataStore.getValue(row, col);
         const evaluatedValue = formulaEngine.evaluate(rawValue);
+        ctx.save();
 
         if (evaluatedValue !== null && evaluatedValue !== undefined) {
+          // define clipping area
+          ctx.beginPath();
+          ctx.rect(x, y, w, h);
+          ctx.clip(); 
+
           ctx.fillStyle = CELL_TEXT_COLOR;
+          ctx.textBaseline = "middle"; 
           ctx.fillText(evaluatedValue.toString(), x + 5, y + h / 2);
+
+          ctx.restore();
         }
       }
     }
 
     // column headers
-    const {top, bottom, left, right} = selection.getBounds();
+    const { top, bottom, left, right } = selection.getBounds();
 
     for (let col = firstCol; col <= lastCol; col++) {
       const tx = colManager.getOffset(col) - scrollX + ROWHDR_W;
@@ -86,7 +95,7 @@ export class GridRenderer {
       ctx.strokeStyle = HEADER_BORDER_COLOR;  // border color
       ctx.strokeRect(tx, 0, w, HEADER_H);
       ctx.fillStyle = HEADER_TEXT_COLOR; // text color
-      ctx.fillText( formulaEngine.columnIndexToLetter(col), tx + colManager.getSize(col) / 2, HEADER_H / 2);
+      ctx.fillText(formulaEngine.columnIndexToLetter(col), tx + colManager.getSize(col) / 2, HEADER_H / 2);
     }
 
     // row headers

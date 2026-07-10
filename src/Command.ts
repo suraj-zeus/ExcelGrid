@@ -4,11 +4,7 @@ export class Command {
 
     constructor() { }
 
-    public undo() : void {
+    public undo(): void { }
 
-    }
-
-    public redo() : void {
-
-    }
+    public redo(): void { }
 }

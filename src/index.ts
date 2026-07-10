@@ -14,6 +14,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const redoBtn = document.getElementById('redoBtn') as HTMLButtonElement;
 
 
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
     const grid = new Grid(
         canvasGrid,
         scrollBox,

@@ -32,9 +32,6 @@ export class Grid {
   private scrollX: number;
   private scrollY: number;
 
-  // // is mouse being dragged after selecting a cell (header or body cell)
-  // private editingCell: EditingCellTypeOrNull;
-
   // grid renderer
   private renderer: GridRenderer;
 
@@ -89,8 +86,8 @@ export class Grid {
     this.scrollY = 0;
 
     // instance of core managers and engines
-    this.rowManager = new DimensionManager(totalRows, DEFAULT_ROW_HEIGHT);
-    this.colManager = new DimensionManager(totalCols, DEFAULT_COL_WIDTH);
+    this.rowManager = new DimensionManager(this.totalRows, DEFAULT_ROW_HEIGHT);
+    this.colManager = new DimensionManager(this.totalCols, DEFAULT_COL_WIDTH);
     this.dataStore = new DataStore();
     this.selection = new Selection();
     this.undoRedoManager = new UndoRedoManager();
@@ -98,10 +95,6 @@ export class Grid {
 
     // renderer for the grid
     this.renderer = new GridRenderer(canvas, this);
-
-    // this.isDragging = false; // true while mouse is held down for range-select
-    // this.editingCell = null; // { row, col } when editing, else null
-
 
     this.cellEditor = new CellEditor(
       this.editorInput,

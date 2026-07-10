@@ -20,7 +20,7 @@ export class DataStore {
         this.values[row + '_' + col] = value;
     }
 
-    public setInitialData() : void {
+    private setInitialData() : void {
         const employeesData : EmployeeType[] = this.getDefaultEmployeesData();
 
         if(employeesData.length == 0) return;
