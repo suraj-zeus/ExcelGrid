@@ -7,17 +7,12 @@ import {
   ROWHDR_W,
 } from "./constants.js";
 import type { DimensionManager } from "./DimensionManager.js";
+import type { Grid } from "./Grid.js";
 import { ResizeCommand } from "./ResizeCommand.js";
 import type { UndoRedoManager } from "./UndoRedoManager.js";
 
 export class ResizeManager {
-  private rowManager: DimensionManager;
-  private colManager: DimensionManager;
-  private undoRedoManager: UndoRedoManager;
-  private getScrollX: () => number;
-  private getScrollY: () => number;
-  private setupSpacer: () => void;
-  private render: () => void;
+ 
 
   // for resizing the grid,
   private resizingColInd: number | null; // index of column being resized, null if not resizing
@@ -27,21 +22,8 @@ export class ResizeManager {
   private resizeStartSize: number; // starting size of row/column (before resizing started)
 
   constructor(
-    rowManager: DimensionManager,
-    colManager: DimensionManager,
-    undoRedoManager: UndoRedoManager,
-    getScrollX: () => number,
-    getScrollY: () => number,
-    setupSpacer: () => void,
-    render: () => void,
+    private grid : Grid,
   ) {
-    this.rowManager = rowManager;
-    this.colManager = colManager;
-    this.undoRedoManager = undoRedoManager;
-    this.getScrollX = getScrollX;
-    this.getScrollY = getScrollY;
-    this.setupSpacer = setupSpacer;
-    this.render = render;
 
     // initial values for resizing
     this.resizingColInd = null;
@@ -61,9 +43,9 @@ export class ResizeManager {
   public getColumnBorderIndexAt(x: number, y: number): number | null {
     if (y > HEADER_H) return null; // not in column header area
 
-    let offset = ROWHDR_W - this.getScrollX();
-    for (let col = 0; col < this.colManager.getCount(); col++) {
-      offset += this.colManager.getSize(col);
+    let offset = ROWHDR_W - this.grid.getScrollX();
+    for (let col = 0; col < this.grid.getColManager().getCount(); col++) {
+      offset += this.grid.getColManager().getSize(col);
 
       if (Math.abs(x - offset) <= RESIZE_HANDLE_SIZE) {
         return col;
@@ -79,9 +61,9 @@ export class ResizeManager {
   public getRowBorderIndexAt(x: number, y: number): number | null {
     if (x > ROWHDR_W) return null;
 
-    let offset = HEADER_H - this.getScrollY();
-    for (let row = 0; row < this.rowManager.getCount(); row++) {
-      offset += this.rowManager.getSize(row);
+    let offset = HEADER_H - this.grid.getScrollY();
+    for (let row = 0; row < this.grid.getRowManager().getCount(); row++) {
+      offset += this.grid.getRowManager().getSize(row);
 
       if (Math.abs(y - offset) <= RESIZE_HANDLE_SIZE) {
         return row;
@@ -99,8 +81,8 @@ export class ResizeManager {
     if (colBorderInd !== null) {
       this.resizingColInd = colBorderInd;
       this.resizingStartX = x;
-      this.resizeStartSize = this.colManager.getSize(colBorderInd);
-      this.render();
+      this.resizeStartSize = this.grid.getColManager().getSize(colBorderInd);
+      this.grid.render();
       return true;
     }
 
@@ -108,12 +90,12 @@ export class ResizeManager {
     if (rowBorderInd !== null) {
       this.resizingRowInd = rowBorderInd;
       this.resizingStartY = y;
-      this.resizeStartSize = this.rowManager.getSize(rowBorderInd);
-      this.render();
+      this.resizeStartSize = this.grid.getRowManager().getSize(rowBorderInd);
+      this.grid.render();
       return true;
     }
 
-    this.render();
+    this.grid.render();
     return false;
   }
 
@@ -124,9 +106,9 @@ export class ResizeManager {
         DEFAULT_COL_WIDTH,
         this.resizeStartSize + (x - this.resizingStartX),
       );
-      this.colManager.setSize(this.resizingColInd, newSize);
-      this.setupSpacer();
-      this.render();
+      this.grid.getColManager().setSize(this.resizingColInd, newSize);
+      this.grid.setupSpacer();
+      this.grid.render();
       return true;
     }
 
@@ -135,13 +117,13 @@ export class ResizeManager {
         DEFAULT_ROW_HEIGHT,
         this.resizeStartSize + (y - this.resizingStartY),
       );
-      this.rowManager.setSize(this.resizingRowInd, newSize);
-      this.setupSpacer();
-      this.render();
+      this.grid.getRowManager().setSize(this.resizingRowInd, newSize);
+      this.grid.setupSpacer();
+      this.grid.render();
       return true;
     }
 
-    this.render(); 
+    this.grid.render(); 
     return false;
   }
 
@@ -153,19 +135,19 @@ export class ResizeManager {
     if (this.resizingColInd !== null) {
       const resizingColInd = this.resizingColInd;
       const oldResizingSize = this.resizeStartSize;
-      const newResizingSize = this.colManager.getSize(resizingColInd);
+      const newResizingSize = this.grid.getColManager().getSize(resizingColInd);
 
       if (oldResizingSize !== newResizingSize) {
         const command: Command = new ResizeCommand(
-          this.colManager,
+          this.grid.getColManager(),
           resizingColInd,
           oldResizingSize,
           newResizingSize,
-          () => this.setupSpacer(),
-          () => this.render(),
+          () => this.grid.setupSpacer(),
+          () => this.grid.render(),
         );
 
-        this.undoRedoManager.pushCommand(command);
+        this.grid.getUndoRedoManager().pushCommand(command);
       }
 
       this.resizingColInd = null;
@@ -175,26 +157,26 @@ export class ResizeManager {
     if (this.resizingRowInd !== null) {
       const resizingRowInd = this.resizingRowInd;
       const oldResizingSize = this.resizeStartSize;
-      const newResizingSize = this.rowManager.getSize(resizingRowInd);
+      const newResizingSize = this.grid.getRowManager().getSize(resizingRowInd);
 
       if (oldResizingSize !== newResizingSize) {
         const command: Command = new ResizeCommand(
-          this.rowManager,
+          this.grid.getRowManager(),
           resizingRowInd,
           oldResizingSize,
           newResizingSize,
-          () => this.setupSpacer(),
-          () => this.render(),
+          () => this.grid.setupSpacer(),
+          () => this.grid.render(),
         );
 
-        this.undoRedoManager.pushCommand(command);
+        this.grid.getUndoRedoManager().pushCommand(command);
       }
 
       this.resizingRowInd = null;
       handled = true;
     }
 
-    this.render();
+    this.grid.render();
     return handled;
   }
 }

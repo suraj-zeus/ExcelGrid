@@ -36,17 +36,34 @@
 - Formula parsing - Currently handles formula parsing for the text written in this format SUM(a1:b2) and =a1+b2
 
 
-## Folder structure
+## Folder structure and Class Structure
 
     ``` 
         - dist/
         - src/
+            - CellEditor.ts             - Handles cell editing task
+            - Command.ts                - Parent class of all the commands
+            - constants.ts              - Stores constant values
+            - DataStore.ts              - Stores text values for each cell
+            - DimensionManager.ts       - Handles row and columns size with offset calculation
+            - EditCellTextCommand.ts    - Command for cell text editing
+            - EventManager.ts           - Handles all mouse and keyboard events
+            - FormulaEngine.ts          - Handles formula parsing
+            - generateJsonData.ts       - Generates 50k employee data on running seed command
+            - Grid.ts                   - Main coordinator class that wires every other class
+            - GridRenderer.ts           - Renders the excel grids in canvas
+            - index.ts                  - Main entry point for this project
+            - ResizeCommand.ts          - Command for row/column resizing
+            - ResizeManager.ts          - Handler resizing tasks
+            - Selection.ts              - Handles cell, row, column and range of cells selection
+            - StatusBarManager.ts       - Computes count, min, max, sum and avg of numeric values present in a selected range of cells
+            - types.ts                  - Custom typescript types used in this project
+            - UndoRedoManager.ts        - It's a command manager that handles undo/redo tasks
         - index.html
         - style.css
 
     ```
 
-## Class structure
 
 
 

@@ -97,24 +97,11 @@ export class Grid {
     this.renderer = new GridRenderer(canvas, this);
 
     this.cellEditor = new CellEditor(
-      this.editorInput,
-      this.dataStore,
-      this.rowManager,
-      this.colManager,
-      this.undoRedoManager,
-      () => this.scrollX,
-      () => this.scrollY,
-      () => this.render(),
+      this
     );
 
     this.resizeManager = new ResizeManager(
-      this.rowManager,
-      this.colManager,
-      this.undoRedoManager,
-      () => this.scrollX,
-      () => this.scrollY,
-      () => this.setupSpacer(),
-      () => this.render(),
+      this
     );
 
 
@@ -183,6 +170,15 @@ export class Grid {
     return this.dataStore;
   }
 
+  public getEditorInput() : HTMLInputElement {
+    return this.editorInput;
+  }
+
+  public getUndoRedoManager() : UndoRedoManager {
+    return this.undoRedoManager;
+  }
+
+  
 
 
   // core methods for grid
@@ -192,13 +188,13 @@ export class Grid {
     this.cellEditor.updateEditorPosition();
   }
 
-  private resizeCanvas() {
+  public resizeCanvas() {
     this.canvas.width = this.scrollBox.clientWidth;
     this.canvas.height = this.scrollBox.clientHeight;
   }
 
   // makes the spacer div the full size of the grid
-  private setupSpacer() {
+  public setupSpacer() {
     this.spacer.style.width = this.colManager.getTotalSize() + ROWHDR_W + "px";
     this.spacer.style.height = this.rowManager.getTotalSize() + HEADER_H + "px";
   }
