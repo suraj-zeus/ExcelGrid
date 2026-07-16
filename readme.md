@@ -52,8 +52,8 @@
 
 ## OOPs and SOLID 
 
-- All features are implemented using classes and objects
-- Every class has its own resposibilities. It only contains the attributes and methods to handle its own responsibility.
+- OOPs - All features are implemented using classes and objects
+- Single Responsibility - Every class has its own resposibilities. It only contains the attributes and methods to handle its own responsibility.
 
     
     ```
@@ -62,13 +62,16 @@
             - UndoRedoManager has just one responsibility which is to manage the states related to undo/redo operation.
     ```
 
-- Other features can be easily extended by creating new classes/objects or by inheriting properties/methods of existing classes. 
+- Open/Closed - Other features can be easily extended by creating new classes/objects or by inheriting properties/methods of existing classes. 
     
     ```
         eg : 
             - EditCellTextCommand and ResizeCommand extends to Command class.
             - New commands can be easily added by extending to existing Command class.
     ```
+- Liskov Substitution: Commands implementing `Command` can be used interchangeably by `CommandManager`.
+- Interface Segregation: Small interfaces like `Command` keep behavior narrow and specific.`Command` has only `redo()` and `undo()`, ensuring implementing classes are not forced to write unnecessary methods
+- Dependency Inversion: Higher-level classes depend on abstractions and injections rather than concrete instantiations. Classes like FormulaEngine and GridRendered receives the objects via constructor injection allowing for modularity, easier testing and clear contracts.
 
 
 

@@ -188,7 +188,7 @@ export class EventManager {
     const x = e.offsetX, y = e.offsetY;
 
     if (this.resizeManager.handleMouseDown(x, y)) {
-      return
+      return;
     };
 
     // clicked on column header

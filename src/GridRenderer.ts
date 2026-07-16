@@ -12,9 +12,9 @@ export class GridRenderer {
   private grid: Grid;
 
   constructor(canvas: HTMLCanvasElement, grid: Grid) {
+    this.grid = grid;
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-    this.grid = grid;
   }
 
   render() {
