@@ -10,10 +10,13 @@ import { DimensionManager } from "./DimensionManager.js";
 import { EventManager } from "./EventManager.js";
 import { FormulaEngine } from "./FormulaEngine.js";
 import { GridRenderer } from "./GridRenderer.js";
+import { KeyboardEventHandler } from "./KeyboardEventHandler.js";
+import { MouseEventHandler } from "./MouseEventHandler.js";
 import { ResizeManager } from "./ResizeManager.js";
 import { Selection } from "./Selection.js";
 import { StatusBarManager } from "./StatusBarManager.js";
 import { UndoRedoManager } from "./UndoRedoManager.js";
+import { WindowEventHandler } from "./WindowEventHandler.js";
 
 export class Grid {
   // HTML elements used to render the grid
@@ -63,7 +66,10 @@ export class Grid {
   // status bar manager (handles updating the status bar)
   private statusBarManager: StatusBarManager;
 
-  
+  private undoBtn: HTMLButtonElement;
+  private redoBtn: HTMLButtonElement;
+
+
   constructor(
     canvas: HTMLCanvasElement,
     scrollBox: HTMLDivElement,
@@ -84,6 +90,9 @@ export class Grid {
 
     this.scrollX = 0;
     this.scrollY = 0;
+
+    this.undoBtn = undoBtn;
+    this.redoBtn = redoBtn;
 
     // instance of core managers and engines
     this.rowManager = new DimensionManager(this.totalRows, DEFAULT_ROW_HEIGHT);
@@ -106,32 +115,14 @@ export class Grid {
 
 
     this.eventManager = new EventManager(
-      this.canvas,
-      this.scrollBox,
-      this.editorInput,
-      undoBtn,
-      redoBtn,
-      this.cellEditor,
-      this.resizeManager,
-      this.selection,
-      this.undoRedoManager,
-      this.rowManager,
-      this.colManager,
-      () => this.scrollX,
-      () => this.scrollY,
-      (x: number, y: number) => {
-        this.scrollX = x;
-        this.scrollY = y;
-      },
-      () => this.resizeCanvas(),
-      () => this.render(),
+      this,
+      new MouseEventHandler(this),
+      new KeyboardEventHandler(this),
+      new WindowEventHandler(this),
     );
 
     this.statusBarManager = new StatusBarManager(
-      this.selection,
-      this.dataStore,
-      this.formulaEngine,
-      this.cellEditor
+      this
     );
 
 
@@ -139,7 +130,7 @@ export class Grid {
     this.resizeCanvas();
     this.eventManager.bindEvents();
     this.render();
-  } 
+  }
 
   // getters and setters for private members
   public getRowManager(): DimensionManager {
@@ -170,16 +161,49 @@ export class Grid {
     return this.dataStore;
   }
 
-  public getEditorInput() : HTMLInputElement {
+  public getFormulaEnginer() : FormulaEngine {
+    return this.formulaEngine;
+  }
+
+  public getEditorInput(): HTMLInputElement {
     return this.editorInput;
   }
 
-  public getUndoRedoManager() : UndoRedoManager {
+  public getUndoRedoManager(): UndoRedoManager {
     return this.undoRedoManager;
   }
 
-  
+  public setScroll(x: number, y: number): void {
 
+    this.scrollX = x;
+    this.scrollY = y;
+
+  }
+
+  public getScrollBox(): HTMLDivElement {
+    return this.scrollBox;
+  }
+
+  public getResizeManager(): ResizeManager {
+    return this.resizeManager;
+  }
+
+  public getCellEditor(): CellEditor {
+    return this.cellEditor;
+  }
+
+  public getUndoButton(): HTMLButtonElement {
+    return this.undoBtn;
+  }
+
+  public getRedoButton(): HTMLButtonElement {
+    return this.redoBtn;
+  }
+
+
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
 
   // core methods for grid
   public render() {

@@ -1,15 +1,11 @@
 import type { CellEditor } from "./CellEditor.js";
 import type { DataStore } from "./Datastore.js";
 import type { FormulaEngine } from "./FormulaEngine.js";
+import type { Grid } from "./Grid.js";
 import type { Selection } from "./Selection.js";
 import type { BoundType } from "./types.js";
 
 export class StatusBarManager {
-  private selection: Selection;
-  private dataStore: DataStore;
-  private formulaEngine: FormulaEngine;
-  private cellEditor: CellEditor;
-
   // html elements for status bar
   private selectionRangeSpan: HTMLElement | null;
   private currentInputField: HTMLElement | null;
@@ -20,15 +16,9 @@ export class StatusBarManager {
   private statMax: HTMLElement | null;
 
   constructor(
-    selection: Selection,
-    dataStore: DataStore,
-    formulaEngine: FormulaEngine,
-    cellEditor: CellEditor
+    private grid: Grid
   ) {
-    this.selection = selection;
-    this.dataStore = dataStore;
-    this.formulaEngine = formulaEngine;
-    this.cellEditor = cellEditor;
+
 
     this.selectionRangeSpan = document.getElementById("selectionRangeSpan");
     this.currentInputField = document.getElementById("currentInputField");
@@ -40,7 +30,7 @@ export class StatusBarManager {
   }
 
   public updateStatusBar() {
-    const bounds: BoundType = this.selection.getBounds();
+    const bounds: BoundType = this.grid.getSelection().getBounds();
 
     // update selection range
     this.updateSelectionRange(bounds);
@@ -56,8 +46,8 @@ export class StatusBarManager {
     if (!this.selectionRangeSpan) return;
 
     // convert bounds to cell references (ex : A1, B2)
-    const startRef = this.formulaEngine.indexToCellRef(bounds.top, bounds.left);
-    const endRef = this.formulaEngine.indexToCellRef(
+    const startRef = this.grid.getFormulaEngine().indexToCellRef(bounds.top, bounds.left);
+    const endRef = this.grid.getFormulaEngine().indexToCellRef(
       bounds.bottom,
       bounds.right,
     );
@@ -67,7 +57,7 @@ export class StatusBarManager {
 
 
   private updateCurrentInputField(): void {
-    const editingCell = this.cellEditor.getEditingCell();
+    const editingCell = this.grid.getCellEditor().getEditingCell();
 
     if (!this.currentInputField) return;
 
@@ -77,7 +67,7 @@ export class StatusBarManager {
     }
 
     const { row, col } = editingCell;
-    const cellRef = this.formulaEngine.indexToCellRef(row, col);
+    const cellRef = this.grid.getFormulaEngine().indexToCellRef(row, col);
 
     this.currentInputField.textContent = `Input Field At : ${cellRef}`;
   }
@@ -91,8 +81,8 @@ export class StatusBarManager {
 
     for (let r = bounds.top; r <= bounds.bottom; r++) {
       for (let c = bounds.left; c <= bounds.right; c++) {
-        const rawValue = this.dataStore.getValue(r, c);
-        const evalVal = this.formulaEngine.evaluate(rawValue);
+        const rawValue = this.grid.getDataStore().getValue(r, c);
+        const evalVal = this.grid.getFormulaEngine().evaluate(rawValue);
 
         // Parse it as a number
         const num = typeof evalVal === "number" ? evalVal : parseFloat(evalVal);
