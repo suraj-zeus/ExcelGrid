@@ -41,24 +41,36 @@
     ``` 
         - dist/
         - src/
-            - CellEditor.ts             - Handles cell editing task
-            - Command.ts                - Parent class of all the commands
-            - constants.ts              - Stores constant values
-            - DataStore.ts              - Stores text values for each cell
-            - DimensionManager.ts       - Handles row and columns size with offset calculation
-            - EditCellTextCommand.ts    - Command for cell text editing
-            - EventManager.ts           - Handles all mouse and keyboard events
-            - FormulaEngine.ts          - Handles formula parsing
-            - generateJsonData.ts       - Generates 50k employee data on running seed command
-            - Grid.ts                   - Main coordinator class that wires every other class
-            - GridRenderer.ts           - Renders the excel grids in canvas
-            - index.ts                  - Main entry point for this project
-            - ResizeCommand.ts          - Command for row/column resizing
-            - ResizeManager.ts          - Handler resizing tasks
-            - Selection.ts              - Handles cell, row, column and range of cells selection
-            - StatusBarManager.ts       - Computes count, min, max, sum and avg of numeric values present in a selected range of cells
-            - types.ts                  - Custom typescript types used in this project
-            - UndoRedoManager.ts        - It's a command manager that handles undo/redo tasks
+            - Interfaces/
+                - IMouseState.ts                - Strategy interface for all the mouse states
+            - MouseStates/
+                - CellSelectionMouseState.ts    - Mouse state for inner cell selection
+                - ColResizeState.ts             - Mouse state for column resize
+                - ColSelectionSate.ts           - Mouse state for selection of all rows in a column
+                - RowResizeState.ts             - Mouse state for row resize
+                - RowSelectionState.ts          - Mouse state for selection of all columns in a row
+            - CellEditor.ts                     - Handles cell editing task
+            - Command.ts                        - Parent class of all the commands
+            - constants.ts                      - Stores constant values
+            - DataStore.ts                      - Stores text values for each cell
+            - DimensionManager.ts               - Handles row and columns size with offset calculation
+            - EditCellTextCommand.ts            - Command for cell text editing
+            - EventManager.ts                   - Binds all the events 
+            - FormulaEngine.ts                  - Handles formula parsing
+            - generateJsonData.ts               - Generates 50k employee data on running seed command
+            - Grid.ts                           - Main coordinator class that wires every other class
+            - GridRenderer.ts                   - Renders the excel grids in canvas
+            - index.ts                          - Main entry point for this project
+            - KeyboardEventHandler.ts           - Binds all keyboard event handlers
+            - MouseEventHandler.ts              - Binds all mouse event handlers
+            - ResizeCommand.ts                  - Command for row/column resizing
+            - ResizeManager.ts                  - Handler resizing tasks
+            - Selection.ts                      - Handles cell, row, column and range of cells selection
+            - StatusBarManager.ts               - Computes count, min, max, sum and avg of numeric values present in a selected 
+                                                  range of cells
+            - types.ts                          - Custom typescript types used in this project
+            - UndoRedoManager.ts                - It's a command manager that handles undo/redo tasks
+            - WindowsEventHandler.ts            - Binds window event handlers 
         - index.html
         - style.css
 
@@ -168,13 +180,63 @@
 - Datastore finally loads and stores these employees records from employees.json at runtime before rendering.
 
 
+## Undo/Redo Working : 
+
+Undo and Redo functionality is implemented using the Command Pattern.
+ 
+Supported operations include:
+ 
+- Cell editing
+- Column / Row resizing
+ 
+Each operation is stored as a command.
+When an action occurs, it is passed to the Undo/Redo manager, which executes it and pushes it to an undoStack. When Ctrl+Z is pressed, the manager pops the command, calls its undo() method, and pushes it to a redoStack.
+
+# Test Cases Covered
+
+The application was tested for the following scenarios:
+ 
+- Rendering 100,000 rows
+- Rendering 500 columns
+- Horizontal scrolling
+- Vertical scrolling
+- Cell editing
+- Formula evaluation
+- Row selection
+- Column selection
+- Range selection
+- Row resizing
+- Column resizing
+- Undo cell edits
+- Redo cell edits
+- Undo row resize
+- Undo column resize
+- Keyboard navigation
+- Status bar calculations
+
+
+
+## Performance Observations
+- Virtual rendering keeps rendering independent of dataset size.
+- Canvas rendering significantly reduces DOM overhead.
+- Rendering performance remains smooth even for datasets containing 100,000 rows.
+
+
+## Accessibility Considerations
+* **Overcoming Canvas Limitations**: An HTML5 `<canvas>` looks like a flat image to a computer, making its grid invisible to screen readers. To fix this, we pop up a real HTML `<input>` box whenever you edit a cell so screen readers can read the text out loud.
+
+* **Keyboard Navigation**: You can use arrow keys to move selection left, right, up and down. Also, use can use CTRL + Z to undo and CTRL + Y to redo actions like resizing and cell text editing.
+
+* **Summary Status Bar**: The calculations bar (Count, Min, Max, Sum, Average) displays its results in standard HTML elements outside the canvas so user may know the summary of a range selection.
+
+* **Selection Accessibility**: We use thick, bold borders alongside colors to show which cells are selected, ensuring colorblind users can see their selection clearly.
 
 
 
 ## Limitations
 
 ### Data & Storage
- **Columns are fixed at 5 visible data columns** (ID, First Name, Last Name, Age, Salary). Columns 6–500 always return `""`. There is no way to add new data columns at runtime.
+- **Number of columns are fixed.** There is no way to add new data columns at runtime.
 - **No persistent storage.** All data is in-memory. Refreshing the page resets everything.
 - **No CSV/Excel import or export.**
 
