@@ -88,7 +88,7 @@ export class CellSelectionMouseState implements IMouseState {
             } else {
                 this.grid.getCanvas().style.cursor = "default";
             }
-            
+
             return;
         }
 

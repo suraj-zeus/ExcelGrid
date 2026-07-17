@@ -75,30 +75,6 @@ export class ResizeManager {
     return null;
   }
 
-  public handleMouseDown(x: number, y: number): boolean {
-    // check if mouse is clicked on a header border area (for resizing)
-    const colBorderInd = this.getColumnBorderIndexAt(x, y);
-    if (colBorderInd !== null) {
-      this.resizingColInd = colBorderInd;
-      this.resizingStartX = x;
-      this.resizeStartSize = this.grid.getColManager().getSize(colBorderInd);
-      this.grid.render();
-      return true;
-    }
-
-    const rowBorderInd = this.getRowBorderIndexAt(x, y);
-    if (rowBorderInd !== null) {
-      this.resizingRowInd = rowBorderInd;
-      this.resizingStartY = y;
-      this.resizeStartSize = this.grid.getRowManager().getSize(rowBorderInd);
-      this.grid.render();
-      return true;
-    }
-
-    this.grid.render();
-    return false;
-  }
-
 
   public resizeRowDown(x: number, y: number): void {
     const rowBorderInd = this.getRowBorderIndexAt(x, y);
@@ -121,37 +97,6 @@ export class ResizeManager {
       this.resizeStartSize = this.grid.getColManager().getSize(colBorderInd);
       this.grid.render();
     }
-  }
-
-
-
-
-  public handleMouseMove(x: number, y: number): boolean {
-    // while resizing a row/column is in progress
-    if (this.resizingColInd !== null) {
-      const newSize = Math.max(
-        DEFAULT_COL_WIDTH,
-        this.resizeStartSize + (x - this.resizingStartX),
-      );
-      this.grid.getColManager().setSize(this.resizingColInd, newSize);
-      this.grid.setupSpacer();
-      this.grid.render();
-      return true;
-    }
-
-    if (this.resizingRowInd !== null) {
-      const newSize = Math.max(
-        DEFAULT_ROW_HEIGHT,
-        this.resizeStartSize + (y - this.resizingStartY),
-      );
-      this.grid.getRowManager().setSize(this.resizingRowInd, newSize);
-      this.grid.setupSpacer();
-      this.grid.render();
-      return true;
-    }
-
-    this.grid.render();
-    return false;
   }
 
 
@@ -180,61 +125,6 @@ export class ResizeManager {
     }
   }
 
-  public handleMouseUp(): boolean {
-
-    let handled = false;
-
-    // stop resizing if any
-    if (this.resizingColInd !== null) {
-      const resizingColInd = this.resizingColInd;
-      const oldResizingSize = this.resizeStartSize;
-      const newResizingSize = this.grid.getColManager().getSize(resizingColInd);
-
-      if (oldResizingSize !== newResizingSize) {
-        const command: Command = new ResizeCommand(
-          this.grid.getColManager(),
-          resizingColInd,
-          oldResizingSize,
-          newResizingSize,
-          () => this.grid.setupSpacer(),
-          () => this.grid.render(),
-        );
-
-        this.grid.getUndoRedoManager().pushCommand(command);
-      }
-
-      this.resizingColInd = null;
-      handled = true;
-    }
-
-    if (this.resizingRowInd !== null) {
-      const resizingRowInd = this.resizingRowInd;
-      const oldResizingSize = this.resizeStartSize;
-      const newResizingSize = this.grid.getRowManager().getSize(resizingRowInd);
-
-      if (oldResizingSize !== newResizingSize) {
-        const command: Command = new ResizeCommand(
-          this.grid.getRowManager(),
-          resizingRowInd,
-          oldResizingSize,
-          newResizingSize,
-          () => this.grid.setupSpacer(),
-          () => this.grid.render(),
-        );
-
-        this.grid.getUndoRedoManager().pushCommand(command);
-      }
-
-      this.resizingRowInd = null;
-      handled = true;
-    }
-
-    this.grid.render();
-    return handled;
-  }
-
-
-
   public resizeRowUp() {
     if (this.resizingRowInd !== null) {
       const resizingRowInd = this.resizingRowInd;
@@ -260,7 +150,7 @@ export class ResizeManager {
   }
 
   public resizeColUp() {
-    
+
     // stop resizing if any
     if (this.resizingColInd !== null) {
       const resizingColInd = this.resizingColInd;
