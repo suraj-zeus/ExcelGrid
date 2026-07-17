@@ -39,7 +39,7 @@ export class CellSelectionMouseState implements IMouseState {
             return;
         };
 
-       
+
         const row = mouseEventHandler.getRowAtY(y);
         const col = mouseEventHandler.getColAtX(x);
 
@@ -55,8 +55,8 @@ export class CellSelectionMouseState implements IMouseState {
         // clicked on row header -> select whole row
         if (x < ROWHDR_W && y > HEADER_H) {
             const nextState = new RowSelectionState(this.grid);
-           mouseEventHandler.changeState(nextState);
-           nextState.mouseDown(e, mouseEventHandler);
+            mouseEventHandler.changeState(nextState);
+            nextState.mouseDown(e, mouseEventHandler);
             return;
         }
 
@@ -79,9 +79,21 @@ export class CellSelectionMouseState implements IMouseState {
         const x = e.offsetX,
             y = e.offsetY;
 
-         // if mouse is not being dragged, then no need to extend the selection range
+        // IF NOT DRAGGING: Update cursors dynamically on hover
+        if (!mouseEventHandler.getIsDragging()) {
+            if (this.grid.getResizeManager().getColumnBorderIndexAt(x, y) !== null) {
+                this.grid.getCanvas().style.cursor = "col-resize";
+            } else if (this.grid.getResizeManager().getRowBorderIndexAt(x, y) !== null) {
+                this.grid.getCanvas().style.cursor = "row-resize";
+            } else {
+                this.grid.getCanvas().style.cursor = "default";
+            }
+            
+            return;
+        }
+
         // also ignore the header area selection while dragging
-        if (!mouseEventHandler.getIsDragging() || x < ROWHDR_W || y < HEADER_H) return;
+        if (x < ROWHDR_W || y < HEADER_H) return;
 
         // otherwise, extend the selection range
         const row = mouseEventHandler.getRowAtY(y);
@@ -94,7 +106,7 @@ export class CellSelectionMouseState implements IMouseState {
 
 
     DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-         // coordinates of double click
+        // coordinates of double click
         const x = e.offsetX, y = e.offsetY;
         if (x < ROWHDR_W || y < HEADER_H) return;
 

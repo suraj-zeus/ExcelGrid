@@ -33,17 +33,7 @@ export class RowSelectionState implements IMouseState {
     }
 
     mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-         const x = e.offsetX, y = e.offsetY;
-        // IF NOT DRAGGING: Update cursors dynamically on hover
-        if (!mouseEventHandler.getIsDragging()) {
-            if (this.grid.getResizeManager().getColumnBorderIndexAt(x, y) !== null) {
-                this.grid.getCanvas().style.cursor = "col-resize";
-            } else if (this.grid.getResizeManager().getRowBorderIndexAt(x, y) !== null) {
-                this.grid.getCanvas().style.cursor = "row-resize";
-            } else {
-                this.grid.getCanvas().style.cursor = "default";
-            }
-        }
+        
     }
 
     DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
