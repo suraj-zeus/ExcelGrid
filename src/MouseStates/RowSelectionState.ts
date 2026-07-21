@@ -2,42 +2,63 @@ import { HEADER_H, ROWHDR_W } from "../constants.js";
 import type { Grid } from "../Grid.js";
 import type { IMouseState } from "../Interfaces/IMouseState.js";
 import type { MouseEventHandler } from "../MouseEventHandler.js";
-import { CellSelectionMouseState } from "./CellSelectionMouseState.js";
 
 
 
 export class RowSelectionState implements IMouseState {
 
+    private isActive: boolean = false;
 
+    constructor(private grid: Grid) { }
 
-    constructor(private grid : Grid) {}
+    public mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
 
-    mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-
-         // coordinates of click
+        // coordinates of click
         const x = e.offsetX, y = e.offsetY;
+
 
         // clicked on row header -> select whole row
         if (x < ROWHDR_W && y > HEADER_H) {
-             mouseEventHandler.setIsDragging(true);
+            this.isActive = true;
+
+            mouseEventHandler.setIsDragging(true);
             const row = mouseEventHandler.getRowAtY(y);
             this.grid.getSelection().selectRow(row, this.grid.getColManager().getCount());
             this.grid.render();
-            return;
+            return true;
         }
+
+        return false;
     }
 
-    mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-         mouseEventHandler.setIsDragging(false);
-        mouseEventHandler.changeState(new CellSelectionMouseState(this.grid));
+    public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+
+        if (!this.isActive) return false;
+
+        mouseEventHandler.setIsDragging(false);
+        this.isActive = false;
+
+        return true;
     }
 
-    mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+         if(!this.isActive) return false;
         
+        const x = e.offsetX, y = e.offsetY;
+
+        if(x > ROWHDR_W) return false;
+
+        const row = mouseEventHandler.getRowAtY(y);
+        const lastColIndex = this.grid.getColManager().getCount() - 1;
+
+        this.grid.getSelection().extendTo(row, lastColIndex);
+        this.grid.render();
+
+        return true;
     }
 
-    DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-
+    public DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+        return false;
     }
 
 }

@@ -5,32 +5,52 @@ import { CellSelectionMouseState } from "./CellSelectionMouseState.js";
 
 
 export class ColResizeState implements IMouseState {
+    private isActive: boolean = false;
 
+    constructor(private grid: Grid) { }
 
-    constructor(private grid : Grid) {}
-
-    mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-         // coordinates of click
+    public mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+        // coordinates of click
         const x = e.offsetX, y = e.offsetY;
+
+        if (this.grid.getResizeManager().getColumnBorderIndexAt(x, y) == null)
+            return false;
+
+        this.isActive = true;
 
         mouseEventHandler.setIsDragging(true);
         this.grid.getResizeManager().resizeColDown(x, y);
+
+        return true;
     }
 
-    mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+
+        if (!this.isActive)
+            return false;
+
         mouseEventHandler.setIsDragging(false);
         this.grid.getResizeManager().resizeColUp();
-        mouseEventHandler.changeState(new CellSelectionMouseState(this.grid));
+
+        this.isActive = false;
+
+        return true;
     }
 
-    mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-         const x = e.offsetX,
-            y = e.offsetY;
+    public mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+
+        if (!this.isActive) return false;
+
+        const x = e.offsetX, y = e.offsetY;
 
         this.grid.getResizeManager().resizeColMove(x, y);
+
+        return true;
     }
 
-    DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+
+        return false;
     }
-    
+
 }

@@ -8,35 +8,64 @@ import { CellSelectionMouseState } from "./CellSelectionMouseState.js";
 
 export class ColSelectionState implements IMouseState {
 
+    private isActive = false;
+
     constructor(private grid: Grid) { }
 
 
-    mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
-        // clicked on column header
+    public mouseDown(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
         // coordinates of click
         const x = e.offsetX, y = e.offsetY;
 
+
+        // clicked on column header
         // select all rows in that column
         if (y < HEADER_H && x > ROWHDR_W) {
+
+            this.isActive = true;
+
             mouseEventHandler.setIsDragging(true);
             const col = mouseEventHandler.getColAtX(x);
             this.grid.getSelection().selectColumn(col, this.grid.getRowManager().getCount());
             this.grid.render();
-            return;
+            return true;
         }
+
+        return false;
     }
 
-    mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+        if(!this.isActive) return false;
+
         mouseEventHandler.setIsDragging(false);
-        mouseEventHandler.changeState(new CellSelectionMouseState(this.grid));
+
+        this.isActive = false;
+
+        return true;
     }
 
-    mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public  mouseMove(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
+        if(!this.isActive) return false;
         
+        const x = e.offsetX, y = e.offsetY;
+
+        if(y > HEADER_H) return false;
+
+        const col = mouseEventHandler.getColAtX(x);
+        const lastRowIndex = this.grid.getRowManager().getCount() - 1;
+
+        this.grid.getSelection().extendTo(lastRowIndex, col);
+        this.grid.render();
+
+
+
+        return true;
     }
 
-    DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+    public  DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
 
+
+        return false;
     }
 
 }

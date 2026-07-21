@@ -2,6 +2,10 @@ import { HEADER_H, ROWHDR_W } from "./constants.js";
 import type { Grid } from "./Grid.js";
 import type { IMouseState } from "./Interfaces/IMouseState.js";
 import { CellSelectionMouseState } from "./MouseStates/CellSelectionMouseState.js";
+import { ColResizeState } from "./MouseStates/ColResizeState.js";
+import { ColSelectionState } from "./MouseStates/ColSelectionState.js";
+import { RowResizeState } from "./MouseStates/RowResizeState.js";
+import { RowSelectionState } from "./MouseStates/RowSelectionState.js";
 
 
 
@@ -10,25 +14,34 @@ export class MouseEventHandler {
 
     // is mouse being dragged after selecting a cell (header or body cell)
     private isDragging: boolean;
-    private currentMouseState : IMouseState;
+    private currentMouseState: IMouseState;
+    private states: IMouseState[];
 
-    constructor(public grid: Grid) {
+    constructor(private grid: Grid) {
         this.isDragging = false;
 
         this.currentMouseState = new CellSelectionMouseState(this.grid);
+
+        this.states = [
+            new ColResizeState(this.grid),
+            new RowResizeState(this.grid),
+            new ColSelectionState(this.grid),
+            new RowSelectionState(this.grid),
+            new CellSelectionMouseState(this.grid)
+        ]
     }
 
 
-    public changeState(newState : IMouseState) {
+    public changeState(newState: IMouseState) {
         this.currentMouseState = newState;
     }
 
 
-    public setIsDragging(isDragging : boolean) {
+    public setIsDragging(isDragging: boolean) {
         this.isDragging = isDragging;
     }
 
-    public getIsDragging() : boolean {
+    public getIsDragging(): boolean {
         return this.isDragging;
     }
 
@@ -49,18 +62,57 @@ export class MouseEventHandler {
     }
 
 
+
+    private mouseDown(e: MouseEvent): void {
+        for (const state of this.states) {
+            if (state.mouseDown(e, this)) {
+                this.changeState(state);
+                return;
+            }
+        }
+    }
+
+
+    private mouseUp(e: MouseEvent): void {
+        for (const state of this.states) {
+            if (state.mouseUp(e, this)) {
+                this.changeState(state);
+                return;
+            }
+        }
+    }
+
+    private mouseMove(e: MouseEvent): void {
+        for (const state of this.states) {
+            if (state.mouseMove(e, this)) {
+                this.changeState(state);
+                return;
+            }
+        }
+    }
+
+    private dbClick(e: MouseEvent): void {
+        for (const state of this.states) {
+            if (state.DbClick(e, this)) {
+                this.changeState(state);
+                return;
+            }
+        }
+    }
+
+
     public bindEvents(): void {
-         // mouse down -> start selection (cell, row, column, or range)
-        this.grid.getCanvas().addEventListener("pointerdown", (e) => this.currentMouseState.mouseDown(e, this));
 
-        // mouse move -> extend range selection while dragging
-        this.grid.getCanvas().addEventListener("pointermove", (e) => this.currentMouseState.mouseMove(e, this));
+        // canvas mouse events
+        this.grid.getCanvas().addEventListener("pointerdown", (e) => this.mouseDown(e));
 
-        // mouse up -> stop dragging
-        window.addEventListener("pointerup", (e) => this.currentMouseState.mouseUp(e, this));
+        this.grid.getCanvas().addEventListener("pointermove", (e) => this.mouseMove(e));
 
-        // double click -> start editing the cell
-        this.grid.getCanvas().addEventListener("dblclick", (e) => this.currentMouseState.DbClick(e, this));
+        window.addEventListener("pointerup", (e) => this.mouseUp(e));
+
+        this.grid.getCanvas().addEventListener("dblclick", (e) => this.dbClick(e));
+
+
 
 
         // undo/ redo handlers
