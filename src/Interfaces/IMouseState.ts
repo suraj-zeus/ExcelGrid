@@ -7,4 +7,5 @@ export interface IMouseState {
     mouseUp(e : MouseEvent, mouseEventHandler : MouseEventHandler) : boolean ;
     mouseMove(e : MouseEvent, mouseEventHandler : MouseEventHandler) : boolean;
     DbClick(e : MouseEvent, mouseEventHandler : MouseEventHandler) : boolean ;
+    hover?(e : MouseEvent, mouseEventHandler : MouseEventHandler) : void;
 }

@@ -1,3 +1,4 @@
+import { ROWHDR_W } from "../constants.js";
 import type { Grid } from "../Grid.js";
 import type { IMouseState } from "../Interfaces/IMouseState.js";
 import type { MouseEventHandler } from "../MouseEventHandler.js";
@@ -21,23 +22,16 @@ export class RowResizeState implements IMouseState {
         if (this.grid.getResizeManager().getRowBorderIndexAt(x, y) == null) return false;
 
         this.isActive = true;
-
-        mouseEventHandler.setIsDragging(true);
         this.grid.getResizeManager().resizeRowDown(x, y);
 
         return true;
     }
 
     public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
-
         if (!this.isActive) return false;
 
-        mouseEventHandler.setIsDragging(false);
         this.grid.getResizeManager().resizeRowUp();
-
-
-         this.isActive = false;
-
+        this.isActive = false;
 
         return true;
     }
@@ -50,14 +44,23 @@ export class RowResizeState implements IMouseState {
         const x = e.offsetX,
             y = e.offsetY;
 
-        this.grid.getResizeManager().resizeRowMove(x, y);
+        // // restrict the cell resizing when pointer moves out of header 
+        //  if(x > ROWHDR_W) 
+        //      return false;
 
+        this.grid.getResizeManager().resizeRowMove(x, y);
         return true;
     }
 
     public DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
-
         return false;
+    }
+
+    public hover(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+        const x = e.offsetX, y = e.offsetY;
+        if (this.grid.getResizeManager().getRowBorderIndexAt(x, y) != null && x < ROWHDR_W) {
+             this.grid.getCanvas().style.cursor = "row-resize";
+        }
     }
 
 }

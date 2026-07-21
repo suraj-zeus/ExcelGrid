@@ -10,18 +10,11 @@ import { RowSelectionState } from "./MouseStates/RowSelectionState.js";
 
 
 export class MouseEventHandler {
-
-
-    // is mouse being dragged after selecting a cell (header or body cell)
-    private isDragging: boolean;
     private currentMouseState: IMouseState;
     private states: IMouseState[];
 
     constructor(private grid: Grid) {
-        this.isDragging = false;
-
         this.currentMouseState = new CellSelectionMouseState(this.grid);
-
         this.states = [
             new ColResizeState(this.grid),
             new RowResizeState(this.grid),
@@ -31,21 +24,9 @@ export class MouseEventHandler {
         ]
     }
 
-
     public changeState(newState: IMouseState) {
         this.currentMouseState = newState;
     }
-
-
-    public setIsDragging(isDragging: boolean) {
-        this.isDragging = isDragging;
-    }
-
-    public getIsDragging(): boolean {
-        return this.isDragging;
-    }
-
-
 
     // get row number at y
     public getRowAtY(y: number): number {
@@ -61,8 +42,6 @@ export class MouseEventHandler {
         );
     }
 
-
-
     private mouseDown(e: MouseEvent): void {
         for (const state of this.states) {
             if (state.mouseDown(e, this)) {
@@ -72,23 +51,28 @@ export class MouseEventHandler {
         }
     }
 
-
     private mouseUp(e: MouseEvent): void {
-        for (const state of this.states) {
-            if (state.mouseUp(e, this)) {
-                this.changeState(state);
-                return;
-            }
+        if (this.currentMouseState != null) {
+            this.currentMouseState.mouseUp(e, this);
         }
     }
 
     private mouseMove(e: MouseEvent): void {
+        const x = e.offsetX, y = e.offsetY;
+
+        // cursor change on hover 
+        this.grid.getCanvas().style.cursor = "default";
         for (const state of this.states) {
-            if (state.mouseMove(e, this)) {
-                this.changeState(state);
-                return;
-            }
+            state.hover?.(e, this);
         }
+
+        // trigger the move event for current state only
+        if (this.currentMouseState != null) {
+            this.currentMouseState.mouseMove(e, this);
+            return;
+        }
+        
+        
     }
 
     private dbClick(e: MouseEvent): void {
@@ -102,17 +86,11 @@ export class MouseEventHandler {
 
 
     public bindEvents(): void {
-
         // canvas mouse events
         this.grid.getCanvas().addEventListener("pointerdown", (e) => this.mouseDown(e));
-
         this.grid.getCanvas().addEventListener("pointermove", (e) => this.mouseMove(e));
-
         window.addEventListener("pointerup", (e) => this.mouseUp(e));
-
         this.grid.getCanvas().addEventListener("dblclick", (e) => this.dbClick(e));
-
-
 
 
         // undo/ redo handlers

@@ -17,14 +17,12 @@ export class ColSelectionState implements IMouseState {
         // coordinates of click
         const x = e.offsetX, y = e.offsetY;
 
-
         // clicked on column header
         // select all rows in that column
         if (y < HEADER_H && x > ROWHDR_W) {
 
             this.isActive = true;
 
-            mouseEventHandler.setIsDragging(true);
             const col = mouseEventHandler.getColAtX(x);
             this.grid.getSelection().selectColumn(col, this.grid.getRowManager().getCount());
             this.grid.render();
@@ -37,10 +35,7 @@ export class ColSelectionState implements IMouseState {
     public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
         if(!this.isActive) return false;
 
-        mouseEventHandler.setIsDragging(false);
-
         this.isActive = false;
-
         return true;
     }
 
@@ -57,14 +52,10 @@ export class ColSelectionState implements IMouseState {
         this.grid.getSelection().extendTo(lastRowIndex, col);
         this.grid.render();
 
-
-
         return true;
     }
 
     public  DbClick(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
-
-
         return false;
     }
 

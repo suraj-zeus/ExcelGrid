@@ -21,7 +21,6 @@ export class RowSelectionState implements IMouseState {
         if (x < ROWHDR_W && y > HEADER_H) {
             this.isActive = true;
 
-            mouseEventHandler.setIsDragging(true);
             const row = mouseEventHandler.getRowAtY(y);
             this.grid.getSelection().selectRow(row, this.grid.getColManager().getCount());
             this.grid.render();
@@ -35,9 +34,7 @@ export class RowSelectionState implements IMouseState {
 
         if (!this.isActive) return false;
 
-        mouseEventHandler.setIsDragging(false);
         this.isActive = false;
-
         return true;
     }
 

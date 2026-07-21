@@ -7,6 +7,7 @@ import type { MouseEventHandler } from "../MouseEventHandler.js";
 
 export class CellSelectionMouseState implements IMouseState {
 
+    private isDragging = false;
     private isActive: boolean = false;
 
     constructor(private grid: Grid) {
@@ -19,13 +20,12 @@ export class CellSelectionMouseState implements IMouseState {
         const row = mouseEventHandler.getRowAtY(y);
         const col = mouseEventHandler.getColAtX(x);
 
-
         // clicked on a normal cell -> start a range selection (single cell if no drag happens)
         if (x > ROWHDR_W && y > HEADER_H) {
             this.isActive = true;
 
+            this.isDragging = true;
             this.grid.getSelection().selectCell(row, col);
-            mouseEventHandler.setIsDragging(true);
             this.grid.render();
 
             return true;
@@ -37,8 +37,7 @@ export class CellSelectionMouseState implements IMouseState {
     public mouseUp(e: MouseEvent, mouseEventHandler: MouseEventHandler): boolean {
         if (!this.isActive) return false;
 
-        mouseEventHandler.setIsDragging(false);
-
+        this.isDragging = false;
         return true;
     }
 
@@ -47,24 +46,12 @@ export class CellSelectionMouseState implements IMouseState {
         if (!this.isActive) return false;
 
         // coordinates of moving mouse
-        const x = e.offsetX,
-            y = e.offsetY;
-
-        // IF NOT DRAGGING: Update cursors dynamically on hover
-        if (!mouseEventHandler.getIsDragging()) {
-            if (this.grid.getResizeManager().getColumnBorderIndexAt(x, y) !== null) {
-                this.grid.getCanvas().style.cursor = "col-resize";
-            } else if (this.grid.getResizeManager().getRowBorderIndexAt(x, y) !== null) {
-                this.grid.getCanvas().style.cursor = "row-resize";
-            } else {
-                this.grid.getCanvas().style.cursor = "default";
-            }
-
-            return false;
-        }
+        const x = e.offsetX, y = e.offsetY;
 
         // also ignore the header area selection while dragging
-        if (x < ROWHDR_W || y < HEADER_H) return false;
+        // or, when not dragging
+        if (x < ROWHDR_W || y < HEADER_H || !this.isDragging) 
+            return false;
 
         // otherwise, extend the selection range
         const row = mouseEventHandler.getRowAtY(y);
@@ -90,6 +77,14 @@ export class CellSelectionMouseState implements IMouseState {
         this.grid.render();
 
         return true;
+    }
+
+    public hover(e: MouseEvent, mouseEventHandler: MouseEventHandler): void {
+        const x = e.offsetX, y = e.offsetY;
+
+        if (x > ROWHDR_W && y > HEADER_H) {
+            this.grid.getCanvas().style.cursor = "cell";
+        }
     }
 
 }
